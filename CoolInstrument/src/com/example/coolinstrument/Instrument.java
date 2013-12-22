@@ -109,6 +109,7 @@ public class Instrument extends Activity implements OnTouchListener {
 
 	}
 
+	//button onclick gesture
 	@Override
 	public boolean onTouch(View v, MotionEvent event) {
 		// TODO Auto-generated method stub
@@ -121,6 +122,8 @@ public class Instrument extends Activity implements OnTouchListener {
 		return false;
 	}
 
+	
+	//swiping gesture
 	@Override
 	public boolean onTouchEvent(MotionEvent event)
 	{
