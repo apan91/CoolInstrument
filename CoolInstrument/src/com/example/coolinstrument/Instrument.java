@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.media.MediaPlayer;
@@ -14,6 +16,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.widget.Button;
+import android.widget.TextView;
 
 public class Instrument extends Activity implements OnTouchListener {
 
@@ -22,14 +25,17 @@ public class Instrument extends Activity implements OnTouchListener {
 	ArrayList<Integer> soundList = new ArrayList<Integer>();
 	ArrayList<MediaPlayer> mediaList = new ArrayList<MediaPlayer>();
 	SoundPool sp;
-	int n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,n12 = 0;
-	MediaPlayer mp1,mp2,mp3;
-	 private MediaPlayer mp;
+	int n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12 = 0;
+	static int lock = 99;
+	MediaPlayer mp1, mp2, mp3;
+	private MediaPlayer mp;
+	TextView test;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
-		
+
 		setContentView(R.layout.instrument);
 		b1 = (Button) findViewById(R.id.B1);
 		b2 = (Button) findViewById(R.id.B2);
@@ -43,6 +49,8 @@ public class Instrument extends Activity implements OnTouchListener {
 		b10 = (Button) findViewById(R.id.B10);
 		b11 = (Button) findViewById(R.id.B11);
 		b12 = (Button) findViewById(R.id.B12);
+		test = (TextView) findViewById(R.id.tvTest);
+
 		buttonList.add(b1);
 		buttonList.add(b2);
 		buttonList.add(b3);
@@ -56,8 +64,8 @@ public class Instrument extends Activity implements OnTouchListener {
 		buttonList.add(b11);
 		buttonList.add(b12);
 		for (int i = 0; i < buttonList.size(); i++) {
-			Button thisButton=buttonList.get(i);
-			//thisButton.setOnClickListener(this);
+			Button thisButton = buttonList.get(i);
+			// thisButton.setOnClickListener(this);
 			thisButton.setOnTouchListener(this);
 			thisButton.setSoundEffectsEnabled(false);
 		}
@@ -99,20 +107,55 @@ public class Instrument extends Activity implements OnTouchListener {
 		soundList.add(n11);
 		soundList.add(n12);
 
-		
-		
-		
 	}
+
 	@Override
 	public boolean onTouch(View v, MotionEvent event) {
 		// TODO Auto-generated method stub
-		
-		if (event.getAction()==MotionEvent.ACTION_DOWN){
-			int i=buttonList.indexOf(v);
+
+		test.setText("" + event.getActionMasked());
+		if (event.getAction() == MotionEvent.ACTION_DOWN) {
+			int i = buttonList.indexOf(v);
 			sp.play(soundList.get(i), 1, 1, 0, 0, 1);
 		}
-		
-		return true;
+		return false;
 	}
 
+	@Override
+	public boolean onTouchEvent(MotionEvent event)
+	{
+		int action=event.getAction();
+		if (action==MotionEvent.ACTION_MOVE){
+			
+			float xVal=event.getX();
+			float yVal=event.getY();
+
+			
+			int[] location = new int[2];
+			for (int buttonCounter=0;buttonCounter<buttonList.size();buttonCounter++){
+				if (lock!=buttonCounter){
+				View button=buttonList.get(buttonCounter);
+						button.getLocationOnScreen(location);
+				
+				float rectX=location[0];
+				float rectY=location[1];
+				RectF buttonRect=new RectF(rectX,rectY,rectX+button.getWidth(),rectY+button.getHeight());
+				Boolean breakout=false;
+				if (buttonRect.contains(xVal, yVal)){
+					sp.play(soundList.get(buttonCounter), 1, 1, 0, 0, 1);
+					breakout=true;
+				}
+				if (breakout){
+					lock=buttonCounter;
+					break;
+				}
+				}
+			}
+			
+			
+		}
+		return false;
+		
+	
+	}
 }
