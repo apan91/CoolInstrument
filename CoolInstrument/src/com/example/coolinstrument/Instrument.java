@@ -1,6 +1,8 @@
 package com.example.coolinstrument;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -11,6 +13,7 @@ import android.media.AudioTrack;
 import android.media.MediaPlayer;
 import android.media.SoundPool;
 import android.os.Bundle;
+import android.support.v4.view.MotionEventCompat;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -22,15 +25,19 @@ public class Instrument extends Activity {
 
 	TextView b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15,
 			b16;
-	ArrayList<View> buttonList = new ArrayList<View>();
-	ArrayList<Integer> soundList = new ArrayList<Integer>();
-	ArrayList<MediaPlayer> mediaList = new ArrayList<MediaPlayer>();
+	HashSet<TextView> buttonList = new HashSet<TextView>();
+	HashMap<String, Integer> soundList = new HashMap<String, Integer>();
+	// ArrayList<MediaPlayer> mediaList = new ArrayList<MediaPlayer>();
 	SoundPool sp;
 	int n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15, n16;
-	static int lock = 99;
+	static String lock = "";
 	MediaPlayer mp1, mp2, mp3;
 	private MediaPlayer mp;
 	TextView test;
+	Boolean noMove = false;
+	HashSet<String> mainHash = new HashSet<String>();
+	HashSet<String> subHash = new HashSet<String>();
+	ArrayList<Integer> playingList = new ArrayList<Integer>();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -72,11 +79,11 @@ public class Instrument extends Activity {
 		buttonList.add(b14);
 		buttonList.add(b15);
 		buttonList.add(b16);
-		for (int i = 0; i < buttonList.size(); i++) {
-			View thisButton = buttonList.get(i);
+		for (Object thisButton : buttonList) {
+			View targetButton = (View) thisButton;
 			// thisButton.setOnClickListener(this);
 			// thisButton.setOnTouchListener(this);
-			thisButton.setSoundEffectsEnabled(false);
+			targetButton.setSoundEffectsEnabled(false);
 		}
 
 		sp = new SoundPool(2, AudioManager.STREAM_MUSIC, 0);
@@ -102,90 +109,200 @@ public class Instrument extends Activity {
 		n14 = sp.load(this, R.raw.note14, 1);
 		n15 = sp.load(this, R.raw.note15, 1);
 		n16 = sp.load(this, R.raw.note16, 1);
-		soundList.add(n1);
-
-		soundList.add(n2);
-
-		soundList.add(n3);
-		soundList.add(n4);
-		soundList.add(n5);
-		soundList.add(n6);
-
-		soundList.add(n7);
-		soundList.add(n8);
-		soundList.add(n9);
-
-		soundList.add(n10);
-		soundList.add(n11);
-		soundList.add(n12);
-		soundList.add(n13);
-		soundList.add(n14);
-		soundList.add(n15);
-		soundList.add(n16);
+		soundList.put("A", n1);
+		soundList.put("Bb", n2);
+		soundList.put("B", n3);
+		soundList.put("C", n4);
+		soundList.put("Db", n5);
+		soundList.put("D", n6);
+		soundList.put("Eb", n7);
+		soundList.put("E", n8);
+		soundList.put("F", n9);
+		soundList.put("Gb", n10);
+		soundList.put("G", n11);
+		soundList.put("Ab", n12);
+		soundList.put("A2", n13);
+		soundList.put("Bb2", n14);
+		soundList.put("B2", n15);
+		soundList.put("C2", n16);
 
 	}
 
-	// button onclick gesture
-
+	/*
+	 * // button onclick gesture
+	 * 
+	 * @Override public boolean onTouch(View v, MotionEvent event) { // TODO
+	 * Auto-generated method stub
+	 * 
+	 * test.setText("" + event.getActionMasked()); if (event.getActionMasked()
+	 * == MotionEvent.ACTION_DOWN) { int i = buttonList.indexOf(v);
+	 * sp.play(soundList.get(i), 1, 1, 0, 0, 1); } return true; }
+	 */
 	// swiping gesture
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		int action = event.getAction();
-		if (action == MotionEvent.ACTION_MOVE) {
+		if (event.getPointerCount() < 3) {
+			int action = event.getActionMasked();
 
-			float xVal = event.getX();
-			float yVal = event.getY();
+			if (action == MotionEvent.ACTION_MOVE) {
+				int pressCount = event.getPointerCount();
+				if (pressCount > 1) {
+					for (int i = 0; i < pressCount; i++) {
+						float xVal = event.getX(i);
+						float yVal = event.getY(i);
 
-			int[] location = new int[2];
-			for (int buttonCounter = 0; buttonCounter < buttonList.size(); buttonCounter++) {
-				if (lock != buttonCounter) {
-					View button = buttonList.get(buttonCounter);
-					button.getLocationOnScreen(location);
+						int[] location = new int[2];
+						Boolean breakout = false;
+						Boolean hashLock = false;
+						for (TextView targetButton : buttonList) {
+							String buttonText = targetButton.getText()
+									.toString();
+							if ((!subHash.contains(buttonText))
+									&& (!mainHash.contains(buttonText))) {
+								if (lock != buttonText) {
+									targetButton.getLocationOnScreen(location);
+
+									float rectX = location[0];
+									float rectY = location[1];
+									RectF buttonRect = new RectF(rectX, rectY,
+											rectX + targetButton.getWidth(),
+											rectY + targetButton.getHeight());
+									if (buttonRect.contains(xVal, yVal)) {
+										sp.play(soundList.get(buttonText), 1,
+												1, 0, 0, 1);
+										breakout = true;
+										subHash.add(buttonText);
+									}
+									if (breakout) {
+										lock = buttonText;
+										break;
+									}
+								}
+							} else {
+								hashLock = true;
+							}
+							if (subHash.size() > 2) {
+								subHash.clear();
+							}
+						}
+
+					}
+				} else {
+
+					float xVal = event.getX();
+					float yVal = event.getY();
+
+					int[] location = new int[2];
+					Boolean breakout = false;
+					Boolean hashLock = false;
+					for (TextView targetButton : buttonList) {
+						String buttonText = targetButton.getText().toString();
+
+						if ((!mainHash.contains(buttonText))
+								&& (!subHash.contains(buttonText))) {
+							if (lock != buttonText) {
+								targetButton.getLocationOnScreen(location);
+
+								float rectX = location[0];
+								float rectY = location[1];
+								RectF buttonRect = new RectF(rectX, rectY,
+										rectX + targetButton.getWidth(), rectY
+												+ targetButton.getHeight());
+								if (buttonRect.contains(xVal, yVal)) {
+									sp.play(soundList.get(buttonText), 1, 1, 0,
+											0, 1);
+									breakout = true;
+									mainHash.add(buttonText);
+								}
+								if (breakout) {
+									lock = buttonText;
+									break;
+								}
+							}
+						} else {
+							hashLock = true;
+						}
+					}
+					if (hashLock)
+						mainHash.clear();
+				}
+			}
+			if (action == MotionEvent.ACTION_DOWN) {
+
+				float xVal = event.getX();
+				float yVal = event.getY();
+
+				int[] location = new int[2];
+				Boolean breakout = false;
+				for (TextView targetButton : buttonList) {
+					String buttonText = targetButton.getText().toString();
+					targetButton.getLocationOnScreen(location);
 
 					float rectX = location[0];
 					float rectY = location[1];
 					RectF buttonRect = new RectF(rectX, rectY, rectX
-							+ button.getWidth(), rectY + button.getHeight());
-					Boolean breakout = false;
+							+ targetButton.getWidth(), rectY
+							+ targetButton.getHeight());
 					if (buttonRect.contains(xVal, yVal)) {
-						sp.play(soundList.get(buttonCounter), 1, 1, 0, 0, 1);
+						sp.play(soundList.get(targetButton.getText()), 1, 1, 0,
+								0, 1);
 						breakout = true;
+						mainHash.add(buttonText);
 					}
 					if (breakout) {
-						lock = buttonCounter;
+						lock = buttonText;
 						break;
 					}
+
 				}
 			}
+			if (action == MotionEvent.ACTION_POINTER_DOWN) {
 
-		}
-		if (action == MotionEvent.ACTION_DOWN) {
+				int index = event.getActionIndex();
 
-			float xVal = event.getX();
-			float yVal = event.getY();
+				float xVal = (int) MotionEventCompat.getX(event, index);
+				float yVal = (int) MotionEventCompat.getY(event, index);
 
-			int[] location = new int[2];
-			for (int buttonCounter = 0; buttonCounter < buttonList.size(); buttonCounter++) {
-				View button = buttonList.get(buttonCounter);
-				button.getLocationOnScreen(location);
-
-				float rectX = location[0];
-				float rectY = location[1];
-				RectF buttonRect = new RectF(rectX, rectY, rectX
-						+ button.getWidth(), rectY + button.getHeight());
+				int[] location = new int[2];
 				Boolean breakout = false;
-				if (buttonRect.contains(xVal, yVal)) {
-					sp.play(soundList.get(buttonCounter), 1, 1, 0, 0, 1);
-					breakout = true;
+				int removeInt = -1;
+				for (TextView targetButton : buttonList) {
+					String buttonText = targetButton.getText().toString();
+					targetButton.getLocationOnScreen(location);
+					float rectX = location[0];
+					float rectY = location[1];
+					RectF buttonRect = new RectF(rectX, rectY, rectX
+							+ targetButton.getWidth(), rectY
+							+ targetButton.getHeight());
+
+					if (buttonRect.contains(xVal, yVal)) {
+						sp.play(soundList.get(targetButton.getText()), 1, 1, 0,
+								0, 1);
+						breakout = true;
+						noMove = true;
+						subHash.add(buttonText);
+					}
+					if (breakout) {
+						lock = buttonText;
+						break;
+
+					}
+
 				}
-				if (breakout) {
-					lock = buttonCounter;
-					break;
-				}
+			}
+			if (action == MotionEvent.ACTION_POINTER_UP) {
+				int i = event.getPointerCount();
+				if (event.getPointerCount() == 2)
+					noMove = false;
+				// subHash.clear();
+			}
+
+			if (action == MotionEvent.ACTION_UP) {
+				noMove = false;
+				// mainHash.clear();
 			}
 
 		}
-		return false;
-
+		return true;
 	}
 }

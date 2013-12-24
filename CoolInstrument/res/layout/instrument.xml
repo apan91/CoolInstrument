@@ -211,7 +211,7 @@
                 android:layout_marginRight="5sp"
                 android:background="#000000"
                 android:gravity="center"
-                android:text="A"
+                android:text="A2"
                 android:textColor="#ffffff" />
 
             <TextView
@@ -224,7 +224,7 @@
                 android:layout_marginRight="5sp"
                 android:background="#000000"
                 android:gravity="center"
-                android:text="Bb"
+                android:text="Bb2"
                 android:textColor="#ffffff" />
 
             <TextView
@@ -237,7 +237,7 @@
                 android:layout_marginRight="5sp"
                 android:background="#000000"
                 android:gravity="center"
-                android:text="B"
+                android:text="B2"
                 android:textColor="#ffffff" />
 
             <TextView
@@ -250,7 +250,7 @@
                 android:layout_marginRight="5sp"
                 android:background="#000000"
                 android:gravity="center"
-                android:text="C"
+                android:text="C2"
                 android:textColor="#ffffff" />
         </LinearLayout>
     </LinearLayout>
